@@ -1,0 +1,230 @@
+# =====================================================
+# RIGHT PANEL
+# =====================================================
+with right_col:
+
+    # =============================================
+    # SCORE CARD
+    # =============================================
+    st.markdown("""
+    <div class="card">
+        <h3 style="margin-bottom:20px;">
+            AI Recommendation & Validation
+        </h3>
+    """, unsafe_allow_html=True)
+
+    score_col1, score_col2 = st.columns(2)
+
+    with score_col1:
+
+        st.markdown(f"""
+        <div class="metric-card">
+            <div class="metric-title">
+                AI Recommended Score
+            </div>
+
+            <div class="metric-value">
+                {ai_score:.0f}
+                <span class="metric-sub">/100</span>
+            </div>
+
+            <div class="metric-status success">
+                High Quality
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with score_col2:
+
+        lecturer_score = st.number_input(
+
+            "Lecturer Score",
+
+            min_value=0.0,
+            max_value=100.0,
+
+            value=80.0,
+
+            step=1.0,
+
+            key="lecturer_score"
+
+        )
+
+    # =============================================
+    # AGREEMENT
+    # =============================================
+    difference = abs(ai_score - lecturer_score)
+
+    if difference <= 5:
+
+        agreement = "High Agreement"
+        agreement_color = "#10B981"
+
+    elif difference <= 10:
+
+        agreement = "Moderate Agreement"
+        agreement_color = "#F59E0B"
+
+    else:
+
+        agreement = "Review Needed"
+        agreement_color = "#EF4444"
+
+    st.markdown(f"""
+    <div class="agreement-box">
+
+        <div class="agreement-header">
+
+            <span>
+                Agreement & Consistency
+            </span>
+
+            <span style="
+                color:{agreement_color};
+                font-weight:700;
+            ">
+                {agreement}
+            </span>
+
+        </div>
+
+        <div class="agreement-bar">
+
+            <div class="agreement-fill"
+                 style="
+                    width:{max(15, 100-difference*5)}%;
+                    background:{agreement_color};
+                 ">
+            </div>
+
+        </div>
+
+        <div class="agreement-footer">
+
+            <span>
+                Difference:
+                <b>{difference:.0f} points</b>
+            </span>
+
+            <span>
+                QWK:
+                <b>
+                    {data['model_metrics']['qwk']}
+                </b>
+            </span>
+
+        </div>
+
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # =============================================
+    # FEEDBACK SECTION
+    # =============================================
+    st.markdown("""
+    <div class="card">
+        <h3 style="margin-bottom:20px;">
+            AI Feedback Recommendation
+        </h3>
+    """, unsafe_allow_html=True)
+
+    # Generate Feedback
+    if feedback_mode == "Static Feedback":
+
+        feedback = generate_static_feedback(
+
+            ai_score,
+            lecturer_score
+
+        )
+
+    else:
+
+        with st.spinner(
+
+            "Generating AI feedback..."
+
+        ):
+
+            feedback = generate_ai_feedback_ollama(
+
+                student_answer=
+                    student_answer,
+
+                reference_answer=
+                    reference_answer,
+
+                ai_score=
+                    ai_score,
+
+                lecturer_score=
+                    lecturer_score,
+
+                course=
+                    course
+
+            )
+
+    st.session_state.feedback = feedback
+
+    # =============================================
+    # AI FEEDBACK TEXT AREA
+    # =============================================
+    st.text_area(
+
+        "AI Feedback",
+
+        value=
+            st.session_state.feedback,
+
+        height=240,
+
+        key="ai_feedback"
+
+    )
+
+    # =============================================
+    # LECTURER VALIDATION
+    # =============================================
+    lecturer_feedback = st.text_area(
+
+        "Lecturer Validation Notes",
+
+        placeholder=
+            "Add lecturer comments, "
+            "validation, or revision notes...",
+
+        height=180,
+
+        key="lecturer_feedback"
+
+    )
+
+    # =============================================
+    # BUTTONS
+    # =============================================
+    btn1, btn2 = st.columns(2)
+
+    with btn1:
+
+        st.button(
+
+            "Reset",
+            use_container_width=True
+
+        )
+
+    with btn2:
+
+        st.button(
+
+            "Save & Finalize",
+            use_container_width=True,
+            type="primary"
+
+        )
+
+    st.markdown("</div>", unsafe_allow_html=True)
